@@ -10,18 +10,21 @@
       padding: 20px;
       background-color: #f5f5f5;
     }
-    h1 {
+
+    h1, h2 {
       color: #333;
     }
+
     .section {
       margin-bottom: 20px;
     }
+
     .button-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
-      margin-top: 10px;
     }
+
     button {
       padding: 10px;
       font-size: 16px;
@@ -31,33 +34,48 @@
       color: white;
       cursor: pointer;
     }
+
     button.selected {
       background-color: #2e7d32;
     }
+
+    input[type="number"], input[type="text"] {
+      padding: 8px;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #order-list {
+      margin-top: 20px;
+    }
+
     .order-item {
-      display: flex;
-      align-items: center;
+      background: #fff;
+      padding: 10px;
       margin-bottom: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
     }
+
     .order-text {
       flex: 1;
-      min-width: 150px;
-      font-size: 16px;
     }
-    input[type="number"] {
-      width: 40px;
-      margin: 0 10px;
+
+    .order-controls {
+      display: flex;
+      gap: 5px;
+      align-items: center;
     }
-    input[type="text"] {
-      padding: 5px;
-      font-size: 16px;
-      width: 100%;
-      margin-top: 5px;
+
+    .order-controls input {
+      width: 50px;
     }
-    #note-input, #custom-drink {
-      margin-top: 10px;
-    }
+
     @media (max-width: 600px) {
       .button-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -76,7 +94,7 @@
       <button onclick="selectDrink('Milo')">Milo</button>
       <button onclick="selectDrink('Others')">Others</button>
     </div>
-    <input type="text" id="custom-drink" placeholder="Enter custom drink" style="display: none;" />
+    <input type="text" id="custom-drink" placeholder="Enter custom drink" style="display:none;" />
   </div>
 
   <div class="section">
@@ -94,13 +112,11 @@
       <button onclick="toggleModifier('Yuan Yang')">Yuan Yang</button>
       <button onclick="toggleModifier('Tarik')">Tarik</button>
     </div>
-    <div id="note-section">
-      <input type="text" id="note-input" placeholder="Add notes (e.g., no sugar, less ice)" />
-    </div>
+    <input type="text" id="note-input" placeholder="Enter notes (e.g. less ice, no sugar)" />
   </div>
 
   <div class="section">
-    <label for="qty">Quantity:</label>
+    <label>Quantity:</label>
     <input type="number" id="qty" min="1" value="1" />
     <button onclick="addOrder()">Add to Order</button>
   </div>
@@ -108,6 +124,7 @@
   <div class="section">
     <h2>Order Summary</h2>
     <div id="order-list"></div>
+    <button onclick="submitOrder()">Submit Order</button>
   </div>
 
   <script>
@@ -116,14 +133,16 @@
     let orders = [];
 
     function selectDrink(drink) {
-      if (drink === "Others") {
-        document.getElementById("custom-drink").style.display = "block";
-      } else {
-        document.getElementById("custom-drink").style.display = "none";
-      }
       selectedDrink = drink;
       document.querySelectorAll("#drink-options button").forEach(btn => btn.classList.remove("selected"));
       event.target.classList.add("selected");
+
+      const customDrinkInput = document.getElementById("custom-drink");
+      if (drink === "Others") {
+        customDrinkInput.style.display = "block";
+      } else {
+        customDrinkInput.style.display = "none";
+      }
     }
 
     function toggleModifier(mod) {
@@ -138,20 +157,21 @@
     }
 
     function addOrder() {
-      let drink = selectedDrink;
+      const mainDrink = selectedDrink !== "Others" ? selectedDrink : "";
       const customDrink = document.getElementById("custom-drink").value.trim();
       const note = document.getElementById("note-input").value.trim();
       const qty = parseInt(document.getElementById("qty").value) || 1;
 
-      if (!drink && !customDrink) {
+      if (!mainDrink && !customDrink) {
         alert("Please select a drink or enter a custom drink.");
         return;
       }
 
-      if (drink === "Others" && customDrink) {
+      let drink = mainDrink;
+      if (customDrink && mainDrink) {
+        drink = `${mainDrink} + ${customDrink}`;
+      } else if (!mainDrink && customDrink) {
         drink = customDrink;
-      } else if (drink !== "Others" && customDrink) {
-        drink = `${drink} + ${customDrink}`;
       }
 
       const fullModifiers = [...selectedModifiers];
@@ -160,7 +180,7 @@
       orders.push({ drink, modifiers: fullModifiers, qty });
       renderOrders();
 
-      // Reset
+      // Reset selections
       selectedDrink = "";
       selectedModifiers = [];
       document.getElementById("custom-drink").value = "";
@@ -173,27 +193,59 @@
     function renderOrders() {
       const list = document.getElementById("order-list");
       list.innerHTML = "";
-      orders.forEach((order, index) => {
-        const div = document.createElement("div");
-        div.className = "order-item";
 
-        const summary = `${order.drink}${order.modifiers.length ? " (" + order.modifiers.join(", ") + ")" : ""}`;
-        div.innerHTML = `
-          <div class="order-text">${summary}</div>
-          <input type="number" value="${order.qty}" min="1" onchange="updateQty(${index}, this.value)" />
-          <button onclick="deleteOrder(${index})">🗑️</button>
-        `;
-        list.appendChild(div);
+      orders.forEach((order, index) => {
+        const item = document.createElement("div");
+        item.className = "order-item";
+
+        const modifiers = order.modifiers.length ? ` (${order.modifiers.join(", ")})` : "";
+        const drinkText = `${order.drink}${modifiers}`;
+
+        const text = document.createElement("div");
+        text.className = "order-text";
+        text.textContent = drinkText;
+
+        const controls = document.createElement("div");
+        controls.className = "order-controls";
+
+        const qtyInput = document.createElement("input");
+        qtyInput.type = "number";
+        qtyInput.value = order.qty;
+        qtyInput.min = 1;
+        qtyInput.addEventListener("change", () => {
+          orders[index].qty = parseInt(qtyInput.value);
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "X";
+        deleteBtn.onclick = () => {
+          orders.splice(index, 1);
+          renderOrders();
+        };
+
+        controls.appendChild(qtyInput);
+        controls.appendChild(deleteBtn);
+
+        item.appendChild(text);
+        item.appendChild(controls);
+        list.appendChild(item);
       });
     }
 
-    function updateQty(index, newQty) {
-      orders[index].qty = parseInt(newQty) || 1;
-    }
+    function submitOrder() {
+      if (orders.length === 0) {
+        alert("No orders to submit.");
+        return;
+      }
 
-    function deleteOrder(index) {
-      orders.splice(index, 1);
-      renderOrders();
+      let message = "Drink Order:\n";
+      orders.forEach(order => {
+        const mods = order.modifiers.length ? ` (${order.modifiers.join(", ")})` : "";
+        message += `- ${order.drink}${mods} x${order.qty}\n`;
+      });
+
+      const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappURL, '_blank');
     }
   </script>
 </body>
