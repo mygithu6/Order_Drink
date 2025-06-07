@@ -2,32 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Singapore Drink Order</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 1rem;
+      padding: 20px;
       background-color: #f5f5f5;
-      margin: 0;
     }
-    h1, h2 {
-      color: #333;
-      margin-top: 1rem;
+    h2 {
+      margin-top: 30px;
     }
-    .section {
-      margin-bottom: 1.5rem;
-    }
-    #options-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
     }
     button {
-      flex: 1 1 40%;
-      min-width: 40%;
-      padding: 0.75rem;
-      font-size: 1rem;
+      padding: 10px;
+      font-size: 16px;
       border: none;
       border-radius: 5px;
       background-color: #4caf50;
@@ -37,129 +30,172 @@
     button.selected {
       background-color: #2e7d32;
     }
-    .delete-btn {
-      background-color: #e53935;
+    #custom-modifier {
+      display: none;
+      margin-top: 10px;
     }
-    input[type="text"],
-    input[type="number"] {
-      width: 100%;
-      font-size: 1rem;
-      padding: 0.5rem;
-      margin-top: 0.5rem;
-      box-sizing: border-box;
+    #order-list {
+      margin-top: 30px;
     }
     .order-item {
-      background: white;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      background: #fff;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .order-item input {
+      width: 50px;
+    }
+    .summary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Drink Order</h1>
 
-  <div class="section">
-    <h2>Select up to 4 options</h2>
-    <div id="options-container">
-      <!-- Buttons will be added dynamically -->
-    </div>
+  <h1>Singapore Drink Order</h1>
+
+  <h2>Choose a Drink</h2>
+  <div id="drink-options" class="grid"></div>
+
+  <h2>Choose Modifiers (max 4)</h2>
+  <div id="modifier-options" class="grid"></div>
+  <input type="text" id="custom-modifier" placeholder="Enter custom modifier (e.g. no ice)" />
+
+  <h2>Quantity</h2>
+  <input type="number" id="quantity" min="1" value="1" />
+
+  <div style="margin-top: 20px;">
+    <button onclick="addOrder()">Add Order</button>
   </div>
 
-  <div class="section">
-    <label>Free text (optional):</label>
-    <input type="text" id="freeText" placeholder="e.g. Less sugar, no ice" />
-  </div>
+  <div id="order-list"></div>
 
-  <div class="section">
-    <label>Quantity:</label>
-    <input type="number" id="quantity" value="1" min="1" />
-  </div>
-
-  <button onclick="addOrder()">Add Order</button>
-
-  <div id="order-summary" class="section">
-    <h2>Order Summary</h2>
-    <div id="orders-list"></div>
-  </div>
+  <div class="summary" id="summary"></div>
 
   <script>
-    const optionLabels = [
-      'Kopi', 'Teh', 'O', 'C',
-      'Kosong', 'Siew Dai', 'Gah Dai', 'Gau',
-      'Po', 'Di Lo', 'Peng',
-      'Yuan yang', 'Tarik'
-    ];
-
-    let selectedOptions = [];
+    const drinks = ["Kopi", "Teh", "Milo"];
+    const modifiers = ["O", "C", "Peng", "Kosong", "Siew Dai", "Gah Dai", "Gau", "Di Lo", "Po", "Yuan Yang", "Tarik", "Others"];
+    let selectedDrink = "";
+    let selectedModifiers = [];
     let orders = [];
 
-    const optionsContainer = document.getElementById('options-container');
-    optionLabels.forEach(label => {
-      const btn = document.createElement('button');
-      btn.innerText = label;
-      btn.onclick = function () {
-        toggleOption(label, btn);
+    const drinkContainer = document.getElementById("drink-options");
+    const modifierContainer = document.getElementById("modifier-options");
+    const customModifierInput = document.getElementById("custom-modifier");
+
+    drinks.forEach(drink => {
+      const btn = document.createElement("button");
+      btn.innerText = drink;
+      btn.onclick = () => {
+        selectedDrink = drink;
+        document.querySelectorAll("#drink-options button").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
       };
-      optionsContainer.appendChild(btn);
+      drinkContainer.appendChild(btn);
     });
 
-    function toggleOption(label, btn) {
-      const index = selectedOptions.indexOf(label);
-      if (index > -1) {
-        selectedOptions.splice(index, 1);
-        btn.classList.remove('selected');
-      } else {
-        if (selectedOptions.length >= 4) {
-          alert("You can only select up to 4 options.");
-          return;
+    modifiers.forEach(mod => {
+      const btn = document.createElement("button");
+      btn.innerText = mod;
+      btn.onclick = () => {
+        if (mod === "Others") {
+          customModifierInput.style.display = "block";
         }
-        selectedOptions.push(label);
-        btn.classList.add('selected');
-      }
-    }
+        if (btn.classList.contains("selected")) {
+          btn.classList.remove("selected");
+          selectedModifiers = selectedModifiers.filter(m => m !== mod);
+          if (mod === "Others") customModifierInput.value = "";
+        } else {
+          if (selectedModifiers.length >= 4) {
+            alert("You can only select up to 4 modifiers.");
+            return;
+          }
+          btn.classList.add("selected");
+          selectedModifiers.push(mod);
+        }
+      };
+      modifierContainer.appendChild(btn);
+    });
 
     function addOrder() {
-      const quantity = parseInt(document.getElementById('quantity').value);
-      const freeText = document.getElementById('freeText').value.trim();
-
-      if (selectedOptions.length === 0 || quantity < 1) {
-        alert("Please select at least one drink option and set a valid quantity.");
+      if (!selectedDrink) {
+        alert("Please select a drink.");
         return;
       }
 
-      const order = {
-        options: [...selectedOptions],
-        freeText: freeText,
-        quantity: quantity
-      };
+      let mods = [...selectedModifiers];
+      const custom = customModifierInput.value.trim();
+      if (mods.includes("Others") && custom) {
+        mods = mods.map(m => m === "Others" ? custom : m);
+      }
 
-      orders.push(order);
+      const quantity = parseInt(document.getElementById("quantity").value);
+      if (isNaN(quantity) || quantity <= 0) {
+        alert("Please enter a valid quantity.");
+        return;
+      }
+
+      orders.push({ drink: selectedDrink, modifiers: mods, quantity });
       renderOrders();
       resetSelection();
     }
 
-    function deleteOrder(index) {
+    function renderOrders() {
+      const container = document.getElementById("order-list");
+      container.innerHTML = "";
+      orders.forEach((order, index) => {
+        const div = document.createElement("div");
+        div.className = "order-item";
+
+        const modsText = order.modifiers.join(" ");
+        div.innerHTML = `
+          <div>
+            ${order.quantity} x ${order.drink} ${modsText}
+          </div>
+          <div>
+            <input type="number" min="1" value="${order.quantity}" onchange="updateQuantity(${index}, this.value)" />
+            <button onclick="removeOrder(${index})">❌</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      const summary = document.getElementById("summary");
+      const summaryText = orders.map(o => `${o.quantity} x ${o.drink} ${o.modifiers.join(" ")}`).join("<br>");
+      summary.innerHTML = summaryText ? `Order Summary:<br>${summaryText}` : "";
+    }
+
+    function removeOrder(index) {
       orders.splice(index, 1);
       renderOrders();
     }
 
     function updateQuantity(index, value) {
       const qty = parseInt(value);
-      if (qty > 0) {
+      if (!isNaN(qty) && qty > 0) {
         orders[index].quantity = qty;
         renderOrders();
       }
     }
 
-    function renderOrders() {
-      const container = document.getElementById('orders-list');
-      container.innerHTML = "";
-
-      orders.forEach((order, index) => {
-        const div = document.createElement('div');
-        div.className = 'order-item';
-
-        const mods = order.options.join(", ");
-        const note = order.freeText ? `<br/><em>Not
+    function resetSelection() {
+      selectedDrink = "";
+      selectedModifiers = [];
+      document.querySelectorAll("button.selected").forEach(btn => btn.classList.remove("selected"));
+      document.getElementById("quantity").value = 1;
+      customModifierInput.style.display = "none";
+      customModifierInput.value = "";
+    }
+  </script>
+</body>
+</html>
