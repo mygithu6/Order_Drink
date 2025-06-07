@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Singapore Drink Order</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+    }
+    .drink-section, .modifier-section {
+      margin-bottom: 20px;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+    }
+    button.selected {
+      background-color: #2e7d32;
+    }
+    #order-summary {
+      margin-top: 30px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Drink Order</h1>
+
+  <div class="drink-section">
+    <h2>Select Drink</h2>
+    <div id="drink-options">
+      <button onclick="selectDrink('Kopi')">Kopi</button>
+      <button onclick="selectDrink('Teh')">Teh</button>
+      <button onclick="selectDrink('Milo')">Milo</button>
+      <button onclick="selectDrink('Barley')">Barley</button>
+    </div>
+  </div>
+
+  <div class="modifier-section">
+    <h2>Add Modifiers</h2>
+    <div id="modifier-options">
+      <button onclick="toggleModifier('peng')">Peng</button>
+      <button onclick="toggleModifier('kosong')">Kosong</button>
+      <button onclick="toggleModifier('siew dai')">Siew Dai</button>
+      <button onclick="toggleModifier('gao')">Gao</button>
+    </div>
+  </div>
+
+  <button onclick="confirmOrder()">Confirm Order</button>
+
+  <div id="order-summary"></div>
+
+  <script>
+    let selectedDrink = "";
+    let selectedModifiers = [];
+
+    function selectDrink(drink) {
+      selectedDrink = drink;
+      document.querySelectorAll('#drink-options button').forEach(btn => btn.classList.remove('selected'));
+      event.target.classList.add('selected');
+    }
+
+    function toggleModifier(mod) {
+      const index = selectedModifiers.indexOf(mod);
+      if (index > -1) {
+        selectedModifiers.splice(index, 1);
+        event.target.classList.remove('selected');
+      } else {
+        selectedModifiers.push(mod);
+        event.target.classList.add('selected');
+      }
+    }
+
+    function confirmOrder() {
+      if (!selectedDrink) {
+        alert("Please select a drink.");
+        return;
+      }
+      const orderText = `${selectedDrink} ${selectedModifiers.join(' ')}`.trim();
+      document.getElementById("order-summary").innerText = `Your order: ${orderText}`;
+    }
+  </script>
+</body>
+</html>
