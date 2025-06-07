@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Singapore Drink Order</title>
   <style>
     body {
@@ -31,8 +31,20 @@
     }
     #order-summary {
       margin-top: 30px;
-      font-size: 20px;
-      font-weight: bold;
+    }
+    .order-item {
+      background: white;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .order-item input {
+      width: 50px;
+      text-align: center;
+    }
+    .delete-btn {
+      background-color: #e53935;
     }
   </style>
 </head>
@@ -59,13 +71,21 @@
     </div>
   </div>
 
-  <button onclick="confirmOrder()">Confirm Order</button>
+  <div>
+    <label>Quantity: <input type="number" id="quantity" value="1" min="1" /></label>
+  </div>
 
-  <div id="order-summary"></div>
+  <button onclick="addOrder()">Add Order</button>
+
+  <div id="order-summary">
+    <h2>Order Summary</h2>
+    <div id="orders-list"></div>
+  </div>
 
   <script>
     let selectedDrink = "";
     let selectedModifiers = [];
+    let orders = [];
 
     function selectDrink(drink) {
       selectedDrink = drink;
@@ -84,13 +104,61 @@
       }
     }
 
-    function confirmOrder() {
-      if (!selectedDrink) {
-        alert("Please select a drink.");
+    function addOrder() {
+      const quantity = parseInt(document.getElementById('quantity').value);
+      if (!selectedDrink || quantity < 1) {
+        alert("Please select a drink and quantity.");
         return;
       }
-      const orderText = `${selectedDrink} ${selectedModifiers.join(' ')}`.trim();
-      document.getElementById("order-summary").innerText = `Your order: ${orderText}`;
+
+      const order = {
+        drink: selectedDrink,
+        modifiers: [...selectedModifiers],
+        quantity: quantity
+      };
+      orders.push(order);
+      renderOrders();
+      resetSelection();
+    }
+
+    function deleteOrder(index) {
+      orders.splice(index, 1);
+      renderOrders();
+    }
+
+    function updateQuantity(index, newQty) {
+      const qty = parseInt(newQty);
+      if (qty > 0) {
+        orders[index].quantity = qty;
+        renderOrders();
+      }
+    }
+
+    function renderOrders() {
+      const container = document.getElementById('orders-list');
+      container.innerHTML = "";
+
+      orders.forEach((order, index) => {
+        const div = document.createElement('div');
+        div.className = 'order-item';
+
+        const mods = order.modifiers.length > 0 ? " (" + order.modifiers.join(", ") + ")" : "";
+        div.innerHTML = `
+          <strong>${order.drink}${mods}</strong><br/>
+          Quantity: <input type="number" min="1" value="${order.quantity}" onchange="updateQuantity(${index}, this.value)" />
+          <button class="delete-btn" onclick="deleteOrder(${index})">Delete</button>
+        `;
+
+        container.appendChild(div);
+      });
+    }
+
+    function resetSelection() {
+      selectedDrink = "";
+      selectedModifiers = [];
+      document.querySelectorAll('#drink-options button').forEach(btn => btn.classList.remove('selected'));
+      document.querySelectorAll('#modifier-options button').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById('quantity').value = 1;
     }
   </script>
 </body>
