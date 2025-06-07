@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Singapore Drink Order</title>
+  <title>Drink Order</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -41,22 +41,16 @@
       background-color: #2e7d32;
     }
 
-    #custom-input {
+    #custom-input, #notes-input {
       display: none;
       margin-top: 10px;
     }
 
-    #custom-input input {
+    input[type="text"], input[type="number"] {
       width: 100%;
       padding: 8px;
       font-size: 16px;
-    }
-
-    #quantity {
-      width: 100%;
-      margin-top: 10px;
-      padding: 8px;
-      font-size: 16px;
+      margin-top: 5px;
     }
 
     #order-list {
@@ -113,6 +107,10 @@
       <button onclick="toggleModifier('Po')">Po</button>
       <button onclick="toggleModifier('Yuan Yang')">Yuan Yang</button>
       <button onclick="toggleModifier('Tarik')">Tarik</button>
+      <button onclick="toggleModifier('Notes')">Notes</button>
+    </div>
+    <div id="notes-input">
+      <input type="text" id="notes-text" placeholder="Enter notes (e.g., less sugar, no ice)"/>
     </div>
   </div>
 
@@ -136,12 +134,8 @@
       document.querySelectorAll('#drink-options button').forEach(btn => btn.classList.remove('selected'));
       event.target.classList.add('selected');
 
-      if (drink === "Others") {
-        document.getElementById("custom-input").style.display = "block";
-      } else {
-        document.getElementById("custom-input").style.display = "none";
-        document.getElementById("custom-drink").value = "";
-      }
+      document.getElementById("custom-input").style.display = drink === "Others" ? "block" : "none";
+      if (drink !== "Others") document.getElementById("custom-drink").value = "";
     }
 
     function toggleModifier(mod) {
@@ -149,13 +143,16 @@
       if (index > -1) {
         selectedModifiers.splice(index, 1);
         event.target.classList.remove('selected');
-      } else {
-        if (selectedModifiers.length >= 4) {
-          alert("Max 4 modifiers allowed.");
-          return;
+        if (mod === "Notes") {
+          document.getElementById("notes-input").style.display = "none";
+          document.getElementById("notes-text").value = "";
         }
+      } else {
         selectedModifiers.push(mod);
         event.target.classList.add('selected');
+        if (mod === "Notes") {
+          document.getElementById("notes-input").style.display = "block";
+        }
       }
     }
 
@@ -171,9 +168,20 @@
       const qty = parseInt(document.getElementById("quantity").value);
       if (isNaN(qty) || qty < 1) return alert("Please enter valid quantity.");
 
+      let mods = [...selectedModifiers];
+      const notesIndex = mods.indexOf("Notes");
+      if (notesIndex > -1) {
+        const note = document.getElementById("notes-text").value.trim();
+        if (note) {
+          mods[notesIndex] = `Note: ${note}`;
+        } else {
+          mods.splice(notesIndex, 1);
+        }
+      }
+
       orders.push({
         drink,
-        modifiers: [...selectedModifiers],
+        modifiers: mods,
         qty
       });
 
@@ -186,7 +194,9 @@
       selectedModifiers = [];
       document.querySelectorAll('button.selected').forEach(btn => btn.classList.remove('selected'));
       document.getElementById("custom-input").style.display = "none";
+      document.getElementById("notes-input").style.display = "none";
       document.getElementById("custom-drink").value = "";
+      document.getElementById("notes-text").value = "";
       document.getElementById("quantity").value = 1;
     }
 
