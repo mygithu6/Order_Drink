@@ -2,199 +2,222 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Singapore Drink Order</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f5f5f5;
+      padding: 15px;
+      background-color: #f0f0f0;
+      max-width: 600px;
+      margin: auto;
     }
-    h2 {
-      margin-top: 30px;
+
+    h1, h2 {
+      text-align: center;
     }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
     }
+
     button {
       padding: 10px;
-      font-size: 16px;
       border: none;
       border-radius: 5px;
       background-color: #4caf50;
       color: white;
+      font-size: 16px;
       cursor: pointer;
     }
+
     button.selected {
       background-color: #2e7d32;
     }
-    #custom-modifier {
+
+    #custom-input {
       display: none;
       margin-top: 10px;
     }
-    #order-list {
-      margin-top: 30px;
+
+    #custom-input input {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
     }
-    .order-item {
-      background: #fff;
+
+    #quantity {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    #order-list {
+      background: white;
       padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
+      border-radius: 5px;
+    }
+
+    .order-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 8px;
+      font-size: 16px;
     }
+
     .order-item input {
       width: 50px;
+      margin-right: 10px;
     }
-    .summary {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-    @media (max-width: 600px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+
+    .order-text {
+      flex: 1;
     }
   </style>
 </head>
 <body>
+  <h1>Drink Order</h1>
 
-  <h1>Singapore Drink Order</h1>
+  <div class="section">
+    <h2>Choose Drink</h2>
+    <div class="grid" id="drink-options">
+      <button onclick="selectDrink('Kopi')">Kopi</button>
+      <button onclick="selectDrink('Teh')">Teh</button>
+      <button onclick="selectDrink('Milo')">Milo</button>
+      <button onclick="selectDrink('Others')">Others</button>
+    </div>
+    <div id="custom-input">
+      <input type="text" id="custom-drink" placeholder="Enter custom drink name"/>
+    </div>
+  </div>
 
-  <h2>Choose a Drink</h2>
-  <div id="drink-options" class="grid"></div>
+  <div class="section">
+    <h2>Modifiers</h2>
+    <div class="grid" id="modifier-options">
+      <button onclick="toggleModifier('O')">O</button>
+      <button onclick="toggleModifier('C')">C</button>
+      <button onclick="toggleModifier('Peng')">Peng</button>
+      <button onclick="toggleModifier('Kosong')">Kosong</button>
+      <button onclick="toggleModifier('Siew Dai')">Siew Dai</button>
+      <button onclick="toggleModifier('Gah Dai')">Gah Dai</button>
+      <button onclick="toggleModifier('Gau')">Gau</button>
+      <button onclick="toggleModifier('Di Lo')">Di Lo</button>
+      <button onclick="toggleModifier('Po')">Po</button>
+      <button onclick="toggleModifier('Yuan Yang')">Yuan Yang</button>
+      <button onclick="toggleModifier('Tarik')">Tarik</button>
+    </div>
+  </div>
 
-  <h2>Choose Modifiers (max 4)</h2>
-  <div id="modifier-options" class="grid"></div>
-  <input type="text" id="custom-modifier" placeholder="Enter custom modifier (e.g. no ice)" />
-
-  <h2>Quantity</h2>
-  <input type="number" id="quantity" min="1" value="1" />
-
-  <div style="margin-top: 20px;">
+  <div class="section">
+    <input type="number" id="quantity" min="1" value="1" placeholder="Quantity" />
     <button onclick="addOrder()">Add Order</button>
   </div>
 
-  <div id="order-list"></div>
-
-  <div class="summary" id="summary"></div>
+  <div class="section">
+    <h2>Order Summary</h2>
+    <div id="order-list"></div>
+  </div>
 
   <script>
-    const drinks = ["Kopi", "Teh", "Milo"];
-    const modifiers = ["O", "C", "Peng", "Kosong", "Siew Dai", "Gah Dai", "Gau", "Di Lo", "Po", "Yuan Yang", "Tarik", "Others"];
     let selectedDrink = "";
     let selectedModifiers = [];
     let orders = [];
 
-    const drinkContainer = document.getElementById("drink-options");
-    const modifierContainer = document.getElementById("modifier-options");
-    const customModifierInput = document.getElementById("custom-modifier");
+    function selectDrink(drink) {
+      selectedDrink = drink;
+      document.querySelectorAll('#drink-options button').forEach(btn => btn.classList.remove('selected'));
+      event.target.classList.add('selected');
 
-    drinks.forEach(drink => {
-      const btn = document.createElement("button");
-      btn.innerText = drink;
-      btn.onclick = () => {
-        selectedDrink = drink;
-        document.querySelectorAll("#drink-options button").forEach(b => b.classList.remove("selected"));
-        btn.classList.add("selected");
-      };
-      drinkContainer.appendChild(btn);
-    });
+      if (drink === "Others") {
+        document.getElementById("custom-input").style.display = "block";
+      } else {
+        document.getElementById("custom-input").style.display = "none";
+        document.getElementById("custom-drink").value = "";
+      }
+    }
 
-    modifiers.forEach(mod => {
-      const btn = document.createElement("button");
-      btn.innerText = mod;
-      btn.onclick = () => {
-        if (mod === "Others") {
-          customModifierInput.style.display = "block";
+    function toggleModifier(mod) {
+      const index = selectedModifiers.indexOf(mod);
+      if (index > -1) {
+        selectedModifiers.splice(index, 1);
+        event.target.classList.remove('selected');
+      } else {
+        if (selectedModifiers.length >= 4) {
+          alert("Max 4 modifiers allowed.");
+          return;
         }
-        if (btn.classList.contains("selected")) {
-          btn.classList.remove("selected");
-          selectedModifiers = selectedModifiers.filter(m => m !== mod);
-          if (mod === "Others") customModifierInput.value = "";
-        } else {
-          if (selectedModifiers.length >= 4) {
-            alert("You can only select up to 4 modifiers.");
-            return;
-          }
-          btn.classList.add("selected");
-          selectedModifiers.push(mod);
-        }
-      };
-      modifierContainer.appendChild(btn);
-    });
+        selectedModifiers.push(mod);
+        event.target.classList.add('selected');
+      }
+    }
 
     function addOrder() {
-      if (!selectedDrink) {
-        alert("Please select a drink.");
-        return;
+      let drink = selectedDrink;
+      if (!drink) return alert("Please select a drink.");
+      if (drink === "Others") {
+        const custom = document.getElementById("custom-drink").value.trim();
+        if (!custom) return alert("Please enter custom drink name.");
+        drink = custom;
       }
 
-      let mods = [...selectedModifiers];
-      const custom = customModifierInput.value.trim();
-      if (mods.includes("Others") && custom) {
-        mods = mods.map(m => m === "Others" ? custom : m);
-      }
+      const qty = parseInt(document.getElementById("quantity").value);
+      if (isNaN(qty) || qty < 1) return alert("Please enter valid quantity.");
 
-      const quantity = parseInt(document.getElementById("quantity").value);
-      if (isNaN(quantity) || quantity <= 0) {
-        alert("Please enter a valid quantity.");
-        return;
-      }
+      orders.push({
+        drink,
+        modifiers: [...selectedModifiers],
+        qty
+      });
 
-      orders.push({ drink: selectedDrink, modifiers: mods, quantity });
+      resetSelections();
       renderOrders();
-      resetSelection();
+    }
+
+    function resetSelections() {
+      selectedDrink = "";
+      selectedModifiers = [];
+      document.querySelectorAll('button.selected').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById("custom-input").style.display = "none";
+      document.getElementById("custom-drink").value = "";
+      document.getElementById("quantity").value = 1;
     }
 
     function renderOrders() {
-      const container = document.getElementById("order-list");
-      container.innerHTML = "";
+      const list = document.getElementById("order-list");
+      list.innerHTML = "";
       orders.forEach((order, index) => {
         const div = document.createElement("div");
         div.className = "order-item";
 
-        const modsText = order.modifiers.join(" ");
+        const summary = `${order.qty} x ${order.drink}${order.modifiers.length ? " (" + order.modifiers.join(", ") + ")" : ""}`;
         div.innerHTML = `
-          <div>
-            ${order.quantity} x ${order.drink} ${modsText}
-          </div>
-          <div>
-            <input type="number" min="1" value="${order.quantity}" onchange="updateQuantity(${index}, this.value)" />
-            <button onclick="removeOrder(${index})">❌</button>
-          </div>
+          <div class="order-text">${summary}</div>
+          <input type="number" value="${order.qty}" min="1" onchange="updateQty(${index}, this.value)">
+          <button onclick="deleteOrder(${index})">🗑️</button>
         `;
-        container.appendChild(div);
+        list.appendChild(div);
       });
-
-      const summary = document.getElementById("summary");
-      const summaryText = orders.map(o => `${o.quantity} x ${o.drink} ${o.modifiers.join(" ")}`).join("<br>");
-      summary.innerHTML = summaryText ? `Order Summary:<br>${summaryText}` : "";
     }
 
-    function removeOrder(index) {
+    function deleteOrder(index) {
       orders.splice(index, 1);
       renderOrders();
     }
 
-    function updateQuantity(index, value) {
-      const qty = parseInt(value);
+    function updateQty(index, newQty) {
+      const qty = parseInt(newQty);
       if (!isNaN(qty) && qty > 0) {
-        orders[index].quantity = qty;
+        orders[index].qty = qty;
         renderOrders();
       }
-    }
-
-    function resetSelection() {
-      selectedDrink = "";
-      selectedModifiers = [];
-      document.querySelectorAll("button.selected").forEach(btn => btn.classList.remove("selected"));
-      document.getElementById("quantity").value = 1;
-      customModifierInput.style.display = "none";
-      customModifierInput.value = "";
     }
   </script>
 </body>
