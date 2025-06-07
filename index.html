@@ -41,16 +41,16 @@
       background-color: #2e7d32;
     }
 
-    #custom-input, #notes-input {
-      display: none;
-      margin-top: 10px;
-    }
-
     input[type="text"], input[type="number"] {
       width: 100%;
       padding: 8px;
       font-size: 16px;
       margin-top: 5px;
+    }
+
+    #others-drink-input, #notes-input {
+      display: none;
+      margin-top: 10px;
     }
 
     #order-list {
@@ -67,11 +67,6 @@
       font-size: 16px;
     }
 
-    .order-item input {
-      width: 50px;
-      margin-right: 10px;
-    }
-
     .order-text {
       flex: 1;
     }
@@ -86,10 +81,10 @@
       <button onclick="selectDrink('Kopi')">Kopi</button>
       <button onclick="selectDrink('Teh')">Teh</button>
       <button onclick="selectDrink('Milo')">Milo</button>
-      <button onclick="selectDrink('Others')">Others</button>
+      <button onclick="toggleOthersDrink()">Others</button>
     </div>
-    <div id="custom-input">
-      <input type="text" id="custom-drink" placeholder="Enter custom drink name"/>
+    <div id="others-drink-input">
+      <input type="text" id="others-drink-text" placeholder="Extra (e.g. siew siew dai)"/>
     </div>
   </div>
 
@@ -115,7 +110,7 @@
   </div>
 
   <div class="section">
-    <input type="number" id="quantity" min="1" value="1" placeholder="Quantity" />
+    <input type="number" id="quantity" min="1" value="1" />
     <button onclick="addOrder()">Add Order</button>
   </div>
 
@@ -128,14 +123,22 @@
     let selectedDrink = "";
     let selectedModifiers = [];
     let orders = [];
+    let isOthersDrink = false;
 
     function selectDrink(drink) {
       selectedDrink = drink;
       document.querySelectorAll('#drink-options button').forEach(btn => btn.classList.remove('selected'));
       event.target.classList.add('selected');
+      isOthersDrink = false;
+      document.getElementById("others-drink-input").style.display = "none";
+      document.getElementById("others-drink-text").value = "";
+    }
 
-      document.getElementById("custom-input").style.display = drink === "Others" ? "block" : "none";
-      if (drink !== "Others") document.getElementById("custom-drink").value = "";
+    function toggleOthersDrink() {
+      isOthersDrink = !isOthersDrink;
+      document.getElementById("others-drink-input").style.display = isOthersDrink ? "block" : "none";
+      const btn = Array.from(document.querySelectorAll('#drink-options button')).find(b => b.innerText === "Others");
+      btn.classList.toggle("selected");
     }
 
     function toggleModifier(mod) {
@@ -158,15 +161,24 @@
 
     function addOrder() {
       let drink = selectedDrink;
-      if (!drink) return alert("Please select a drink.");
-      if (drink === "Others") {
-        const custom = document.getElementById("custom-drink").value.trim();
-        if (!custom) return alert("Please enter custom drink name.");
-        drink = custom;
+      let customExtra = document.getElementById("others-drink-text").value.trim();
+
+      if (!drink && !customExtra) {
+        alert("Please select a drink or enter a custom one.");
+        return;
+      }
+
+      if (drink && customExtra) {
+        drink = `${drink} (${customExtra})`;
+      } else if (!drink && customExtra) {
+        drink = customExtra;
       }
 
       const qty = parseInt(document.getElementById("quantity").value);
-      if (isNaN(qty) || qty < 1) return alert("Please enter valid quantity.");
+      if (isNaN(qty) || qty < 1) {
+        alert("Enter a valid quantity.");
+        return;
+      }
 
       let mods = [...selectedModifiers];
       const notesIndex = mods.indexOf("Notes");
@@ -179,12 +191,7 @@
         }
       }
 
-      orders.push({
-        drink,
-        modifiers: mods,
-        qty
-      });
-
+      orders.push({ drink, modifiers: mods, qty });
       resetSelections();
       renderOrders();
     }
@@ -192,10 +199,11 @@
     function resetSelections() {
       selectedDrink = "";
       selectedModifiers = [];
+      isOthersDrink = false;
       document.querySelectorAll('button.selected').forEach(btn => btn.classList.remove('selected'));
-      document.getElementById("custom-input").style.display = "none";
+      document.getElementById("others-drink-input").style.display = "none";
       document.getElementById("notes-input").style.display = "none";
-      document.getElementById("custom-drink").value = "";
+      document.getElementById("others-drink-text").value = "";
       document.getElementById("notes-text").value = "";
       document.getElementById("quantity").value = 1;
     }
